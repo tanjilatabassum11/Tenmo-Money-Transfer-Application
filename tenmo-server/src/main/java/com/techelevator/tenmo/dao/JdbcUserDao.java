@@ -1,6 +1,7 @@
 package com.techelevator.tenmo.dao;
 
 import com.techelevator.tenmo.model.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -15,6 +16,8 @@ import java.util.List;
 @Component
 public class JdbcUserDao implements UserDao {
 
+    @Autowired
+    private jdbcAccountDao accountDao;
     private JdbcTemplate jdbcTemplate;
 
     public JdbcUserDao(JdbcTemplate jdbcTemplate) {
@@ -67,9 +70,16 @@ public class JdbcUserDao implements UserDao {
             return false;
         }
 
+
         // TODO: Create the account record with initial balance
 
-        return true;
+        boolean successful = accountDao.create(newUserId);
+        if (successful){
+            return true;
+        }else {
+            return false;
+        }
+
     }
 
     private User mapRowToUser(SqlRowSet rs) {
