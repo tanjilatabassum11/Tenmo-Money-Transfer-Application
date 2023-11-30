@@ -4,6 +4,7 @@ public class account {
     private int account_id;
     private int user_id;
     private double balance;
+    private String username = null;
     public int getAccount_id() {
         return account_id;
     }
@@ -27,6 +28,13 @@ public class account {
     public void setBalance(double balance) {
         this.balance = balance;
     }
+    public String getUsername(){
+        return username;
+    }
+    public void setUsername(String username){
+        this.username = username;
+    }
+    public account(){ }
 
     public account(int user_id,int account_id, double balance){
         this.user_id = user_id;
