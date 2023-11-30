@@ -6,4 +6,5 @@ public interface accountDao {
 
       account findAccountByAccountId(int accountId);
       boolean create(int user_id);
+      boolean transfer(int fromUserId, int toUserId, double transferAmount);
 }

@@ -23,7 +23,19 @@ public class JdbcUserDao implements UserDao {
     public JdbcUserDao(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
-    
+
+    @Override
+    public List<User> listUsersForTransfer() {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT username, user_id FROM tenmo_user";
+        SqlRowSet results = jdbcTemplate.queryForRowSet(sql);
+        while(results.next()){
+            User user = mapRowToUserPublic(results);
+            users.add(user);
+        }
+        return users;
+
+    }
     @Override
     public int findIdByUsername(String username) {
         String sql = "SELECT user_id FROM tenmo_user WHERE username ILIKE ?;";
@@ -72,13 +84,15 @@ public class JdbcUserDao implements UserDao {
 
 
         // TODO: Create the account record with initial balance
-
-        boolean successful = accountDao.create(newUserId);
-        if (successful){
-            return true;
-        }else {
-            return false;
+        try {
+            boolean successful = accountDao.create(newUserId);
+            if (successful){
+                return true;
+            }
+        } catch (Exception e) {
+            System.out.println("User id was invalid");
         }
+        return false;
 
     }
 
@@ -87,6 +101,15 @@ public class JdbcUserDao implements UserDao {
         user.setId(rs.getLong("user_id"));
         user.setUsername(rs.getString("username"));
         user.setPassword(rs.getString("password_hash"));
+        user.setActivated(true);
+        user.setAuthorities("USER");
+        return user;
+    }
+    private User mapRowToUserPublic(SqlRowSet rs) {
+        User user = new User();
+        user.setId(rs.getLong("user_id"));
+        user.setUsername(rs.getString("username"));
+        user.setPassword("Hidden");
         user.setActivated(true);
         user.setAuthorities("USER");
         return user;
