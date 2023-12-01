@@ -12,6 +12,16 @@ public class Transfer {
     @Min(1)
     private double transferAmount;
 
+    public int getTransferId() {
+        return transferId;
+    }
+
+    public void setTransferId(int transferId) {
+        this.transferId = transferId;
+    }
+    @NotNull
+    private int transferId;
+
     public int getFromUserId() {
         return fromUserId;
     }
@@ -35,4 +45,11 @@ public class Transfer {
     public void setTransferAmount(double transferAmount) {
         this.transferAmount = transferAmount;
     }
+    public Transfer(int fromUserId, int toUserId, double transferAmount, int transferId){
+        this.fromUserId = fromUserId;
+        this.toUserId = toUserId;
+        this.transferAmount = transferAmount;
+        this.transferId = transferId;
+    }
+    public Transfer(){}
 }

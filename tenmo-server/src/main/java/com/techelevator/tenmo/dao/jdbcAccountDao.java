@@ -2,6 +2,7 @@ package com.techelevator.tenmo.dao;
 
 
 import com.techelevator.tenmo.Exception.DaoException;
+import com.techelevator.tenmo.model.Transfer;
 import com.techelevator.tenmo.model.User;
 import com.techelevator.tenmo.model.account;
 import org.springframework.cache.annotation.AbstractCachingConfiguration;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.security.auth.login.AccountNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class jdbcAccountDao implements accountDao{
@@ -67,7 +70,7 @@ private JdbcTemplate jdbcTemplate;
         }
         return null;
     }
-
+    @Override
     public account findAccountByUserId(int id){
         account account = new account();
         String sql = "SELECT account.user_id, tenmo_user.username, account_id, balance FROM account" +
@@ -106,7 +109,52 @@ private JdbcTemplate jdbcTemplate;
             throw new DaoException("Data Integrity Violation", e);
         }
     }
+    @Override
+    public List<Transfer> getTransfersByUserId(int id){
+        List<Transfer> transfers = new ArrayList<>();
+        String sql = "SELECT * FROM transfer WHERE from_user_id = ? OR to_user_id = ?;";
+        try {
+            SqlRowSet results = jdbcTemplate.queryForRowSet(sql, id, id);
+            while (results.next()) {
+                Transfer transfer = mapRowToTransfer(results);
+                transfers.add(transfer);
+            }
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database.");
+        }
+        return transfers;
+    }
+    @Override
+    public Transfer getTransferByTransferId(int id){
+        Transfer transfer = null;
+        String sql = "SELECT * FROM transfer WHERE transfer_id = ?;";
+        try {
+            SqlRowSet results = jdbcTemplate.queryForRowSet(sql, id);
+            if (results.next()) {
+                transfer = mapRowToTransfer(results);
+            }
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException(("Unable to connect to server or database"));
+        }
+        return transfer;
+    }
+    @Override
+    public Transfer createTransfer(Transfer transfer) {
+        Transfer newTransfer = null;
+        String sql = "INSERT INTO transfer (from_user_id, to_user_id, transfer_amount)" +
+                "VALUES (?, ?, ?) RETURNING transfer_id;";
+        try {
+            int newTransferId = jdbcTemplate.queryForObject(sql, int.class, transfer.getFromUserId(),
+                    transfer.getToUserId(), transfer.getTransferAmount());
+            newTransfer = getTransferByTransferId(newTransferId);
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database");
+        } catch (DataIntegrityViolationException e){
+            throw new DaoException("Data integrity violation");
+        }
 
+        return newTransfer;
+    }
 
     private account mapRowToAccount(SqlRowSet rs) {
         account account = new account();
@@ -115,6 +163,14 @@ private JdbcTemplate jdbcTemplate;
         account.setBalance(rs.getDouble("balance"));
         account.setUsername(rs.getString("username"));
         return account;
+    }
+    private Transfer mapRowToTransfer(SqlRowSet rs) {
+        Transfer transfer = new Transfer();
+        transfer.setTransferId(rs.getInt("transfer_id"));
+        transfer.setFromUserId(rs.getInt("from_user_id"));
+        transfer.setToUserId(rs.getInt("to_user_id"));
+        transfer.setTransferAmount(rs.getDouble("transfer_amount"));
+        return transfer;
     }
 
 }

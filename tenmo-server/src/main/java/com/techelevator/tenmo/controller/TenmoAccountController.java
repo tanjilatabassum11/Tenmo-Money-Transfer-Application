@@ -7,6 +7,7 @@ import com.techelevator.tenmo.dao.jdbcAccountDao;
 import com.techelevator.tenmo.model.Transfer;
 import com.techelevator.tenmo.model.User;
 import com.techelevator.tenmo.model.account;
+import org.apache.coyote.Request;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -50,7 +51,27 @@ public class TenmoAccountController {
         } catch (DaoException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid transfer parameters.");
         }
+        Transfer newTransfer = accountDao.createTransfer(transfer);
         return true;
     }
+
+    @RequestMapping(path = "/account/{id}/transfers", method = RequestMethod.GET)
+    public List<Transfer> getTransfersByAccount(@PathVariable int id) {
+        List<Transfer> transfers = accountDao.getTransfersByUserId(id);
+        if (transfers == null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No transfers found.");
+        } else {
+            return transfers;
+        }
+    }
+    @RequestMapping(path = "/admin/viewTransfer/{id}", method = RequestMethod.GET)
+    public Transfer getTransferById(@PathVariable int id) {
+        Transfer transfer = accountDao.getTransferByTransferId(id);
+        if (transfer == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Transfer not found.");
+        }
+        return transfer;
+    }
+
 
 }
