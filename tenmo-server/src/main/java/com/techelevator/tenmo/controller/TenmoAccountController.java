@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -34,7 +35,8 @@ public class TenmoAccountController {
         return userDao.listUsersForTransfer();
     }
     @RequestMapping(path = "/account/{id}", method = RequestMethod.GET)
-    public account get(@PathVariable int id){
+    public account get(@PathVariable int id, Principal principal){
+        int userId = userDao.findIdByUsername(principal.getName());
         account account = accountDao.findAccountByAccountId(id);
         if (account == null){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found.");
